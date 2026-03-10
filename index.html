@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Equipment Schedule Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:      #B91C1C;
+    --red-dark: #7f1d1d;
+    --red-soft: #FEF2F2;
+    --navy:     #1e3a5f;
+    --cream:    #FAFAF7;
+    --stone:    #F5F4F0;
+    --border:   #E5E3DC;
+    --text:     #1C1C1C;
+    --muted:    #6B6863;
+    --green:    #15803d;
+    --green-soft:#f0fdf4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    font-weight: 400;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    background: var(--navy);
+    height: 5px;
+    width: 100%;
+  }
+
+  /* ── Header ── */
+  header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--red);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .logo-text h1 {
+    font-family: 'Lora', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .logo-text p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+  .header-tag {
+    font-size: 0.75rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 400;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--navy);
+    color: white;
+    text-align: center;
+    padding: 56px 24px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,0.015) 40px,
+      rgba(255,255,255,0.015) 80px
+    );
+  }
+  .hero h2 {
+    font-family: 'Lora', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    position: relative;
+    letter-spacing: -0.3px;
+  }
+  .hero p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.65);
+    max-width: 480px;
+    margin: 0 auto;
+    font-weight: 300;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* ── How it works ── */
+  .how-it-works {
+    background: var(--stone);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .how-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 400;
+    padding: 4px 16px;
+  }
+  .how-step strong { color: var(--text); font-weight: 600; }
+  .how-arrow { color: var(--border); font-size: 1rem; }
+
+  /* ── Main content ── */
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Form sections ── */
+  .section {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .section:hover { box-shadow: 0 2px 16px rgba(0,0,0,0.05); }
+
+  .section-header {
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    width: 26px; height: 26px;
+    background: var(--red);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .section-body { padding: 24px; }
+
+  /* ── Upload ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--stone);
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--red);
+    background: var(--red-soft);
+  }
+  .upload-zone input[type=file] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+  .upload-zone h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .upload-zone p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+  .upload-zone.has-file {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .file-pill {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--green-soft);
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-top: 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--green);
+  }
+  .file-pill.show { display: flex; }
+  .file-pill button {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--green);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.6;
+    padding: 0 2px;
+  }
+  .file-pill button:hover { opacity: 1; }
+
+  /* ── Settings ── */
+  .settings-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+  }
+  .field input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--stone);
+    transition: all 0.15s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--navy);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(30,58,95,0.07);
+  }
+  .field-hint {
+    font-size: 0.74rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* ── Big button ── */
+  .btn-main {
+    width: 100%;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 17px;
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 4px;
+    letter-spacing: 0.2px;
+  }
+  .btn-main:hover:not(:disabled) {
+    background: var(--red-dark);
+    box-shadow: 0 6px 20px rgba(185,28,28,0.25);
+    transform: translateY(-1px);
+  }
+  .btn-main:disabled {
+    background: #D1CFC8;
+    color: #9e9b94;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ── Progress ── */
+  .progress-section {
+    display: none;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-bottom: 16px;
+  }
+  .progress-section.show { display: block; }
+  .progress-label {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dots span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  .progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  .progress-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ── Error ── */
+  .error-box {
+    display: none;
+    background: var(--red-soft);
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: var(--red-dark);
+    margin-bottom: 16px;
+  }
+  .error-box.show { display: block; }
+
+  /* ── Results ── */
+  .results-section {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeUp 0.4s ease;
+  }
+  .results-section.show { display: flex; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-bar {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .results-stats { display: flex; gap: 28px; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-val {
+    font-family: 'Lora', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .stat-lbl {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .btn-download {
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-download:hover {
+    background: #166534;
+    box-shadow: 0 4px 14px rgba(21,128,61,0.25);
+    transform: translateY(-1px);
+  }
+  .btn-restart {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-restart:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── Preview table ── */
+  .table-wrap {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead tr { background: var(--navy); }
+  thead th {
+    color: white;
+    font-weight: 600;
+    padding: 11px 13px;
+    text-align: left;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody tr:nth-child(even) { background: var(--stone); }
+  tbody tr:nth-child(odd)  { background: white; }
+  tbody tr:hover           { background: var(--red-soft); }
+  tbody td {
+    padding: 9px 13px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tfoot tr { background: var(--navy); }
+  tfoot td {
+    padding: 10px 13px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: white;
+    font-weight: 300;
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 0 20px; }
+    .how-it-works { padding: 16px 20px; gap: 0; }
+    .how-step { padding: 4px 8px; font-size: 0.76rem; }
+    main { padding: 24px 16px 60px; }
+    .settings-row { grid-template-columns: 1fr; }
+    .results-stats { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">📋</div>
+    <div class="logo-text">
+      <h1>Equipment Schedule Tool</h1>
+      <p>Contractors Equipment · Internal Use</p>
+    </div>
+  </div>
+  <div class="header-tag">For internal use only</div>
+</header>
+
+<div class="hero">
+  <h2>Turn Your Form Into a Spreadsheet</h2>
+  <p>Upload your equipment form, enter the rate and deductible, and download a ready-to-import Excel file in seconds.</p>
+</div>
+
+<div class="how-it-works">
+  <div class="how-step"><strong>1.</strong>&nbsp; Upload your form</div>
+  <div class="how-arrow">→</div>
+  <div class="how-step"><strong>2.</strong>&nbsp; Enter rate &amp; deductible</div>
+  <div class="how-arrow">→</div>
+  <div class="how-step"><strong>3.</strong>&nbsp; Click Generate</div>
+  <div class="how-arrow">→</div>
+  <div class="how-step"><strong>4.</strong>&nbsp; Download your spreadsheet</div>
+</div>
+
+<main>
+
+  <!-- Step 1: Upload -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Upload Your Equipment Form</div>
+    </div>
+    <div class="section-body">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".pdf" />
+        <span class="upload-icon">📄</span>
+        <h3>Click here to select your PDF, or drag and drop it</h3>
+        <p>Accepts ACORD 146 and Applied 146SE forms</p>
+      </div>
+      <div class="file-pill" id="filePill">
+        <span>✅</span>
+        <span id="fileNameText">Form loaded</span>
+        <button onclick="clearFile()" title="Remove file">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Settings -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Enter Policy Details</div>
+    </div>
+    <div class="section-body">
+      <div class="settings-row">
+        <div class="field">
+          <label>Rate</label>
+          <input type="number" id="rateInput" value="0.30" step="0.01" min="0" placeholder="0.30" />
+          <span class="field-hint">Applied to every item on the schedule</span>
+        </div>
+        <div class="field">
+          <label>Deductible ($)</label>
+          <input type="number" id="deductibleInput" value="1000" step="100" min="0" placeholder="1000" />
+          <span class="field-hint">Default deductible for all items</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate button -->
+  <button class="btn-main" id="generateBtn" disabled onclick="generate()">
+    Generate My Spreadsheet
+  </button>
+
+  <!-- Progress -->
+  <div class="progress-section" id="progressSection">
+    <div class="progress-label">
+      Working on it
+      <div class="dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-sub" id="progressSub">Reading your form…</div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Results -->
+  <div class="results-section" id="resultsSection">
+
+    <div class="results-bar">
+      <div class="results-stats">
+        <div class="stat">
+          <div class="stat-val" id="statItems">—</div>
+          <div class="stat-lbl">Items Found</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="statTotal">—</div>
+          <div class="stat-lbl">Total Insured Value</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-restart" onclick="restart()">↩ Start Over</button>
+        <button class="btn-download" onclick="downloadExcel()">⬇ Download Spreadsheet</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="previewTable"></table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  Equipment Schedule Tool · Internal Use Only
+</footer>
+
+<script>
+  let parsedItems = [];
+  let pdfBase64   = '';
+
+  // ── File handling ─────────────────────────────────────────────────────────
+  const fileInput  = document.getElementById('fileInput');
+  const uploadZone = document.getElementById('uploadZone');
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type === 'application/pdf') handleFile(f);
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pdfBase64 = ev.target.result.split(',')[1];
+      uploadZone.classList.add('has-file');
+      document.getElementById('filePill').classList.add('show');
+      document.getElementById('fileNameText').textContent = file.name;
+      document.getElementById('generateBtn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearFile() {
+    pdfBase64 = '';
+    fileInput.value = '';
+    uploadZone.classList.remove('has-file');
+    document.getElementById('filePill').classList.remove('show');
+    document.getElementById('generateBtn').disabled = true;
+  }
+
+  // ── Generate ──────────────────────────────────────────────────────────────
+  async function generate() {
+    const rate       = parseFloat(document.getElementById('rateInput').value)       || 0.30;
+    const deductible = parseFloat(document.getElementById('deductibleInput').value) || 1000;
+
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('progressSection').classList.add('show');
+    document.getElementById('resultsSection').classList.remove('show');
+    document.getElementById('errorBox').classList.remove('show');
+
+    setProgress(15, 'Reading your form…');
+
+    try {
+      setProgress(40, 'Pulling equipment details…');
+
+      const res = await fetch('/api/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfBase64 })
+      });
+
+      setProgress(75, 'Building your spreadsheet…');
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      parsedItems = data.items.map((item, i) => ({
+        action:      'Add',
+        itemNum:     i + 1,
+        description: item.description || '',
+        serial:      (item.serial && item.serial.trim()) ? item.serial.trim() : 'NA',
+        rate:        rate,
+        limit:       item.limit || 0,
+        valuation:   'ACV',
+        income:      'No',
+        deductible:  deductible,
+      }));
+
+      setProgress(100, 'Done!');
+
+      setTimeout(() => {
+        document.getElementById('progressSection').classList.remove('show');
+        renderResults();
+        document.getElementById('resultsSection').classList.add('show');
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
+
+    } catch (err) {
+      document.getElementById('progressSection').classList.remove('show');
+      const box = document.getElementById('errorBox');
+      box.textContent = 'Something went wrong — please check your file and try again. If the problem continues, contact your administrator.';
+      box.classList.add('show');
+      document.getElementById('generateBtn').disabled = false;
+    }
+  }
+
+  function setProgress(pct, msg) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressSub').textContent  = msg;
+  }
+
+  // ── Render results ────────────────────────────────────────────────────────
+  function renderResults() {
+    const total = parsedItems.reduce((s, r) => s + r.limit, 0);
+    document.getElementById('statItems').textContent = parsedItems.length;
+    document.getElementById('statTotal').textContent = '$' + total.toLocaleString();
+
+    const cols = ['Action','Item #','Description of Equipment','Serial Number','Rate','Limit','Valuation','Include in Income Coverage','Deductible'];
+    let html = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+
+    parsedItems.forEach(r => {
+      html += `<tr>
+        <td>${r.action}</td>
+        <td>${r.itemNum}</td>
+        <td>${r.description}</td>
+        <td>${r.serial}</td>
+        <td>${r.rate}</td>
+        <td>$${r.limit.toLocaleString()}</td>
+        <td>${r.valuation}</td>
+        <td>${r.income}</td>
+        <td>$${r.deductible.toLocaleString()}</td>
+      </tr>`;
+    });
+
+    html += `</tbody><tfoot><tr>
+      <td colspan="5">TOTAL INSURED VALUE</td>
+      <td>$${total.toLocaleString()}</td>
+      <td colspan="3"></td>
+    </tr></tfoot>`;
+
+    document.getElementById('previewTable').innerHTML = html;
+  }
+
+  // ── Download Excel ────────────────────────────────────────────────────────
+  function downloadExcel() {
+    const wb = XLSX.utils.book_new();
+    const headers = [
+      'Action','Item #','Description of Equipment','Serial Number',
+      'Rate','Limit','Valuation',
+      'Include in Income Coverage Equipment Schedule','Deductible'
+    ];
+    const rows = parsedItems.map(r => [
+      r.action, r.itemNum, r.description, r.serial,
+      r.rate, r.limit, r.valuation, r.income, r.deductible
+    ]);
+
+    const wsData = [['CONTRACTORS EQUIPMENT SCHEDULE'], [], headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [10,8,45,26,8,14,12,20,12].map(w => ({ wch: w }));
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Equipment Schedule');
+    XLSX.writeFile(wb, 'equipment_schedule.xlsx');
+  }
+
+  // ── Restart ───────────────────────────────────────────────────────────────
+  function restart() {
+    parsedItems = [];
+    clearFile();
+    document.getElementById('resultsSection').classList.remove('show');
+    document.getElementById('errorBox').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
